@@ -1,0 +1,25 @@
+{
+  "name": "orthographeplusshared",
+  "version": "1.3.0",
+  "description": "types et documentation partagés",
+  "main": ".",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "version:patch": "npm version patch && git push && git push --tags",
+    "version:minor": "npm version minor && git push && git push --tags",
+    "version:major": "npm version major && git push && git push --tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OrthographePlusEnfant/OrthographePlusShared.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/OrthographePlusEnfant/OrthographePlusShared/issues"
+  },
+  "homepage": "https://github.com/OrthographePlusEnfant/OrthographePlusShared#readme",
+  "peerDependencies": {
+    "zod": "^4.4.3"
+  }
+}
