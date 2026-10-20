@@ -1,0 +1,54 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: orthographe-plus-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: devpassword
+      MONGO_INITDB_DATABASE: orthographe_plus
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - orthographe-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orthographe-plus-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      MONGO_HOST: mongodb
+      MONGO_PORT: 27017
+      MONGO_DB: orthographe_plus
+      MONGO_USER: root
+      MONGO_PASSWORD: devpassword
+      MONGO_AUTH_SOURCE: admin
+      JWT_SECRET: HYdKkSSuYplNyJF3fDB2OzoARNmHpknmAivv0TNVu0U
+      CORS_ORIGIN: ""
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - orthographe-net
+
+volumes:
+  mongodb-data:
+    driver: local
+
+networks:
+  orthographe-net:
+    driver: bridge
