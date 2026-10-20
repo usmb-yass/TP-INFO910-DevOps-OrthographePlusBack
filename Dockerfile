@@ -14,6 +14,7 @@ RUN npm ci
 
 # Copie des fichiers du code source
 COPY tsconfig.json ./
+COPY @types/ ./@types/
 COPY src/ ./src/
 COPY shared/ ./shared/
 
