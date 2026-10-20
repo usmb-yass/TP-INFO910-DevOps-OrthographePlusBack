@@ -37,6 +37,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 # Copie du package.json, des dépendances et du build depuis le builder
 COPY package*.json ./
+COPY .env.example ./.env.example
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
