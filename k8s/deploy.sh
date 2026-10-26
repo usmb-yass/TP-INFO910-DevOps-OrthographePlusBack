@@ -54,10 +54,23 @@ done
 
 if [ "$BUILD" = true ]; then
   command -v minikube >/dev/null 2>&1 || error "minikube est introuvable dans le PATH."
+
+  # Se placer dans le contexte de build
+  cd "$ROOT_DIR"
+
   info "Construction de l'image MongoDB avec le dump de la base de données"
-  minikube image build -f "$ROOT_DIR/Dockerfile.mongodb" -t orthographe-plus-mongodb:latest "$ROOT_DIR"
+  minikube image build -f Dockerfile.mongodb -t orthographe-plus-mongodb:latest .
+
   info "Construction de l'image API"
-  minikube image build -t orthographe-plus-api:latest "$ROOT_DIR"
+  minikube image build -t orthographe-plus-api:latest .
+
+  # Vérifier que les images sont bien chargées dans Minikube, sinon les pods
+  # finiront en ImagePullBackOff (sans message clair).
+  for image in orthographe-plus-mongodb:latest orthographe-plus-api:latest; do
+    if ! minikube image ls | grep -F "$image" >/dev/null; then
+      error "L'image '$image' est introuvable dans Minikube après le build."
+    fi
+  done
 fi
 
 # --- Namespace ----------------------------------------------------------------
@@ -94,6 +107,17 @@ fi
 
 # --- Manifests -----------------------------------------------------------------
 
+# Mémoriser si les déploiements existaient déjà : un `rollout restart` sur un
+# Deployment tout juste créé provoquerait un second ReplicaSet inutile.
+MONGO_EXISTED=false
+API_EXISTED=false
+if kubectl get deployment/mongodb -n "$NAMESPACE" >/dev/null 2>&1; then
+  MONGO_EXISTED=true
+fi
+if kubectl get deployment/api -n "$NAMESPACE" >/dev/null 2>&1; then
+  API_EXISTED=true
+fi
+
 info "Application des manifests dans le namespace '$NAMESPACE'"
 shopt -s nullglob
 for manifest in "$SCRIPT_DIR"/*.yaml; do
@@ -106,19 +130,27 @@ done
 # sans restart, l'ancien conteneur continue de tourner avec l'ancienne image
 
 if [ "$BUILD" = true ]; then
-  info "Redémarrage des déploiements pour utiliser les nouvelles images"
-  kubectl rollout restart deployment/mongodb -n "$NAMESPACE"
-  kubectl rollout restart deployment/api -n "$NAMESPACE"
+  if [ "$MONGO_EXISTED" = true ]; then
+    info "Redémarrage de MongoDB pour utiliser la nouvelle image"
+    kubectl rollout restart deployment/mongodb -n "$NAMESPACE"
+  fi
+  if [ "$API_EXISTED" = true ]; then
+    info "Redémarrage de l'API pour utiliser la nouvelle image"
+    kubectl rollout restart deployment/api -n "$NAMESPACE"
+  fi
+  if [ "$MONGO_EXISTED" = false ] && [ "$API_EXISTED" = false ]; then
+    info "Premier déploiement : les pods utilisent déjà les images qui viennent d'être construites"
+  fi
 fi
 
 # --- Attente du déploiement ---------------------------------------------------
 
 info "Attente de MongoDB..."
-kubectl rollout status deployment/mongodb -n "$NAMESPACE" --timeout=180s || \
+kubectl rollout status deployment/mongodb -n "$NAMESPACE" --timeout=300s || \
   warn "MongoDB n'est pas prêt (vérifiez 'kubectl get pods -n $NAMESPACE')."
 
 info "Attente de l'API..."
-kubectl rollout status deployment/api -n "$NAMESPACE" --timeout=180s || \
+kubectl rollout status deployment/api -n "$NAMESPACE" --timeout=300s || \
   warn "L'API n'est pas prête (image construite ? voir './k8s/deploy.sh --build')."
 
 # --- Résumé -------------------------------------------------------------------
@@ -130,4 +162,3 @@ kubectl get pods,svc,pvc -n "$NAMESPACE"
 echo
 info "Accès à l'API :"
 echo "    minikube service api -n $NAMESPACE --url"
-echo "    curl \$(minikube service api -n $NAMESPACE --url)/health-check"
