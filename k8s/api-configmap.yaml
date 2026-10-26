@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  labels:
+    app: orthographe-plus
+    tiers: backend
+data:
+  PORT: "3000"
+  NODE_ENV: "production"
+  MONGO_HOST: "mongodb"
+  MONGO_PORT: "27017"
+  MONGO_DB: "orthographe_plus_junior"
+  MONGO_AUTH_SOURCE: "admin"
+  CORS_ORIGIN: ""

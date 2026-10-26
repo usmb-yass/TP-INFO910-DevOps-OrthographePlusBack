@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: orthographe-plus
+  labels:
+    app.kubernetes.io/name: orthographe-plus
+    app.kubernetes.io/part-of: orthographe-plus-app

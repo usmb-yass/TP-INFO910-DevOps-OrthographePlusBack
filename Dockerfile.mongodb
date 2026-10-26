@@ -1,0 +1,6 @@
+# Image MongoDB avec le dump restauré automatiquement à la première initialisation.
+FROM mongo:7.0
+
+COPY base-de-donnees-mongodb/orthographe_plus_junior /docker-entrypoint-initdb.d/dump
+COPY db/init/01-restore-dump.sh /docker-entrypoint-initdb.d/01-restore-dump.sh
+RUN chmod +x /docker-entrypoint-initdb.d/01-restore-dump.sh

@@ -58,7 +58,7 @@ export const logger = winston.createLogger({
 export const setupLogs = (app: Application) => {
     // Log des requêtes API (info) et de leur body (debug)
     app.use((req: Request, res: Response, next: NextFunction) => {
-        if (req.originalUrl === '/health-check') {
+        if (req.originalUrl === '/health-check' || req.originalUrl === '/healthz') {
             return next();
         }
 

@@ -69,6 +69,12 @@ app.get('/health-check', (req, res) => {
   res.status(200).send('OK');
 });
 
+// probe readiness : vérifie que la connexion MongoDB est active
+app.get('/healthz', (req, res) => {
+  const ready = mongoose.connection.readyState === 1;
+  res.status(ready ? 200 : 503).send(ready ? 'OK' : 'NOT READY');
+});
+
 app.listen(PORT, () => {
   logger.info(`Serveur lancé sur le port ${PORT}`);
 });

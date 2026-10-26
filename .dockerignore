@@ -13,6 +13,5 @@ yarn-error.log*
 .vscode
 .idea
 db/data-import
-base-de-donnees-mongodb
 tests
 doc
