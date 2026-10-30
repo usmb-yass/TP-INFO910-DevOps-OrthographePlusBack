@@ -142,6 +142,15 @@ kubectl get pods -n orthographe-plus -w
 minikube service api -n orthographe-plus --url
 ```
 
+#### 8. Accéder à la base de données depuis MongoDB Compass
+```bash
+# via le port 27017 local
+kubectl port-forward svc/mongodb -n orthographe-plus 27017:27017
+
+# alternative
+minikube service mongodb -n orthographe-plus --url
+```
+
 ## Autres commandes
 
 - Afficher les logs de l'API :
